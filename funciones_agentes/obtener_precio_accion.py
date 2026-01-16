@@ -1,30 +1,33 @@
-# importar la función By de selenium.webdriver.common.by,
-# misma que permite seleccionar elementos de una página web
-# por medio de selectores CSS.
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-# Función para obtener el precio de una acción
-# Parámetros:
-# - driver: objeto de Selenium WebDriver
-# - consulta: cadena de texto que contiene la consulta del usuario
 def obtener_precio_accion(driver, consulta):
-    # Buscar el precio de una acción en Google
-    driver.get(f"https://www.google.com/search?q=precio+acción+{consulta}")
+    consulta = consulta.lower()
+    for palabra in ["precio", "accion", "acciones", "valor", "de", "la"]:
+        consulta = consulta.replace(palabra, "")
+    consulta = consulta.strip()
 
-    # Bloque try-except para manejar errores
+    driver.get(f"https://www.google.com/search?q=acción+{consulta}&hl=es")
+
     try:
-        # Obtener el nombre completo de la emprea
-        empresa = driver.find_element(By.CSS_SELECTOR, "div[class='PZPZlf ssJ7i B5dxMb']").text
+        wait = WebDriverWait(driver, 15)
 
-        # Obtener el precio de la acción
-        precio = driver.find_element(By.CSS_SELECTOR, "span[jsname='vWLAgc']").text
+        precio = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "span[jsname='L3mUVe']"))
+        ).text
 
-        # Obtener la divisa de la acción
-        divisa = 
+        divisa = driver.find_element(By.CSS_SELECTOR, "span[jsname='T3Us2d']").text
 
-        # Obtener el ticker de la acción. Éste es el código que se usa para identificar la acción en la bolsa. Por ejemplo, el ticker de Apple es AAPL.
-        ticker = 
-        
-        return f"{empresa} [{ticker}]  ${precio} {divisa.upper()}."
+        empresa = driver.find_element(
+            By.CSS_SELECTOR, "div[class*='PZPZlf']"
+        ).text
+
+        ticker = driver.find_element(
+            By.CSS_SELECTOR, "div[class*='iAIpCb']"
+        ).text
+
+        return f"{empresa} ({ticker}) → ${precio} {divisa}"
+
     except Exception as e:
-        return "No se pudo obtener el precio de la acción en este momento."
+        return f"No se pudo obtener el precio de la acción ({type(e)})"
